@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Chkoba Code – Jeu de programmation</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; text-align: center; }
+    h1 { color: #333; }
+    #center, #hand { margin: 20px auto; display: flex; justify-content: center; flex-wrap: wrap; }
+    .card { width: 100px; height: 60px; margin: 5px; line-height: 60px; border-radius: 8px; color: #fff; cursor: pointer; font-weight: bold; }
+    .Variables { background: #ADD8E6; color: #000; }
+    .Operators { background: #90EE90; color: #000; }
+    .Instructions { background: #FFA500; }
+    .Special { background: #FF6347; }
+    #actions { margin: 20px; }
+    button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>Chkoba Code – La bataille des programmeurs</h1>
+
+<div id="score"></div>
+
+<h2>Centre de jeu</h2>
+<div id="center"></div>
+
+<h2>Votre main</h2>
+<div id="hand"></div>
+
+<div id="actions">
+    <button onclick="playCard()">Jouer la carte</button>
+    <button onclick="drawCard()">Piocher</button>
+</div>
+
+<script>
+const cards = [
+    {text: "x", type:"Variables"}, {text:"y", type:"Variables"}, {text:"z", type:"Variables"},
+    {text:"5", type:"Variables"}, {text:"10", type:"Variables"}, {text:"'Hello'", type:"Variables"},
+    {text:"'Python'", type:"Variables"}, {text:"True", type:"Variables"}, {text:"False", type:"Variables"},
+    {text:"=", type:"Operators"}, {text:"+", type:"Operators"}, {text:"-", type:"Operators"}, {text:">", type:"Operators"},
+    {text:"<", type:"Operators"}, {text:"and", type:"Operators"}, {text:"or", type:"Operators"},
+    {text:"print()", type:"Instructions"}, {text:"if", type:"Instructions"}, {text:"for", type:"Instructions"},
+    {text:"while", type:"Instructions"}, {text:"def", type:"Instructions"}, {text:"return", type:"Instructions"},
+    {text:"break", type:"Instructions"}, {text:"pass", type:"Instructions"}, {text:"input()", type:"Instructions"},
+    {text:"SyntaxError", type:"Special"}, {text:"IndentationError", type:"Special"}, {text:"break card", type:"Special"},
+    {text:"pass card", type:"Special"}, {text:"skip turn", type:"Special"}, {text:"double play", type:"Special"},
+    {text:"reverse", type:"Special"}, {text:"steal", type:"Special"}, {text:"bonus point", type:"Special"}
+];
+
+let deck = [...cards];
+let hand = [];
+let center = [];
+let selectedHandIndex = null;
+let selectedCenterIndex = null;
+let score = 0;
+
+function shuffle(array) {
+    for(let i = array.length -1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+shuffle(deck);
+
+for(let i=0;i<5;i++){ if(deck.length>0) hand.push(deck.pop()); }
+for(let i=0;i<4;i++){ if(deck.length>0) center.push(deck.pop()); }
+
+function render() {
+    const centerDiv = document.getElementById('center');
+    centerDiv.innerHTML = '';
+    center.forEach((c,i)=>{
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${c.type}`;
+        cardDiv.textContent = c.text;
+        cardDiv.onclick = ()=>{selectedCenterIndex=i; highlightCards();};
+        if(i===selectedCenterIndex) cardDiv.style.border="3px solid black";
+        centerDiv.appendChild(cardDiv);
+    });
+
+    const handDiv = document.getElementById('hand');
+    handDiv.innerHTML='';
+    hand.forEach((c,i)=>{
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${c.type}`;
+        cardDiv.textContent = c.text;
+        cardDiv.onclick = ()=>{selectedHandIndex=i; highlightCards();};
+        if(i===selectedHandIndex) cardDiv.style.border="3px solid black";
+        handDiv.appendChild(cardDiv);
+    });
+
+    document.getElementById('score').textContent = `Score: ${score}`;
+}
+
+function highlightCards(){ render(); }
+
+function playCard(){
+    if(selectedHandIndex===null){ alert("Sélectionnez une carte de votre main."); return; }
+    const card = hand[selectedHandIndex];
+    if(card.type==="Special"){ applySpecial(card); hand.splice(selectedHandIndex,1); selectedHandIndex=null; render(); checkEndGame(); return; }
+    if(selectedCenterIndex!==null){
+        const centerCard = center[selectedCenterIndex];
+        if(isValidCombination(card, centerCard)){ score+=2; hand.splice(selectedHandIndex,1); center.splice(selectedCenterIndex,1); alert("Bonne combinaison !"); selectedHandIndex=null; selectedCenterIndex=null; }
+        else { alert("Combinaison invalide."); return; }
+    } else { center.push(card); hand.splice(selectedHandIndex,1); selectedHandIndex=null; }
+    render(); checkEndGame();
+}
+
+function drawCard(){ if(deck.length===0){ alert("Pioche vide"); return; } hand.push(deck.pop()); render(); }
+
+function isValidCombination(card1, card2){
+    const valid = [["print()", "'Hello'"], ["print()", "'Python'"], ["x","="], ["y","="], ["if","x"], ["if","y"], ["for","x"], ["for","y"]];
+    return valid.some(p => (p[0]===card1.text && p[1]===card2.text)||(p[1]===card1.text && p[0]===card2.text));
+}
+
+function applySpecial(card){ if(card.text==="bonus point"){ score+=1; alert("Bonus ! +1 point"); } else alert(`Carte spéciale jouée: ${card.text}`); }
+
+function checkEndGame(){ if(deck.length===0 && hand.length===0 && center.length===0){ alert("Fin de la partie !"); showAd(); } }
+
+function showAd(){
+    const link = "https://tonsite.com"; // Remplace par ton lien d'affiliation
+    const popup = window.open("", "pub", "width=400,height=300");
+    popup.document.write("<h2>Merci d'avoir joué à Chkoba Code !</h2>");
+    popup.document.write("<p>Découvrez nos autres jeux et contenus exclusifs !</p>");
+    popup.document.write(`<a href='${link}' target='_blank'><button style='padding:10px 20px;font-size:16px;'>Visitez notre site</button></a>`);
+}
+
+render();
+</script>
+
+</body>
+</html>
